@@ -44,7 +44,7 @@ class NoonlightClient(object):
         """
         Create an alarm
 
-        :param body: A dictionary of data to post with the alarm. Wiil be
+        :param body: A dictionary of data to post with the alarm. Will be
             automatically serialized to JSON. See
             https://docs.noonlight.com/reference#create-alarm
         :returns: Alarm data as a dictionary
@@ -52,6 +52,20 @@ class NoonlightClient(object):
                  TooManyRequests, InternalServerError
         """
         return await self._post(ALARMS_URL, body)
+
+    async def update_alarm(self, id, body):
+        """
+        Create an alarm
+
+        :param id: Id of the alarm
+        :param body: A dictionary of data to post with the alarm. Will be
+            automatically serialized to JSON. See
+            https://docs.noonlight.com/reference#create-alarm
+        :returns: Alarm data as a dictionary
+        :raises: ClientError, Unauthorized, BadRequest, Forbidden,
+                 TooManyRequests, InternalServerError
+        """
+        return await self._put(ALARM_URL.format(id=id), body)
 
     @staticmethod
     def handle_error(status, error):
@@ -68,17 +82,25 @@ class NoonlightClient(object):
         else:
             raise NoonlightClient.ClientError(error)
 
-    async def _get(self, path, **kwargs):
+    async def _get(self, path):
         async with self._session.get(
-                path, headers=dict(self._headers, **kwargs)) as resp:
+                path, headers=self._headers) as resp:
             if 200 <= resp.status < 300:
                 return await resp.json()
             else:
                 self.handle_error(resp.status, await resp.json())
 
-    async def _post(self, path, data, **kwargs):
+    async def _post(self, path, data):
         async with self._session.post(
-                path, json=data, headers=dict(self._headers, **kwargs)) as resp:
+                path, json=data, headers=self._headers) as resp:
+            if 200 <= resp.status < 300:
+                return await resp.json()
+            else:
+                self.handle_error(resp.status, await resp.json())
+
+    async def _put(self, path, data):
+        async with self._session.put(
+                path, json=data, headers=self._headers) as resp:
             if 200 <= resp.status < 300:
                 return await resp.json()
             else:
