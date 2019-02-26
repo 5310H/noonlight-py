@@ -3,6 +3,7 @@ import aiohttp
 BASE_URL = "https://api-sandbox.safetrek.io/v1"
 ALARMS_URL = BASE_URL + '/alarms'
 ALARM_URL = ALARMS_URL + '/{id}/status'
+ALARM_LOCATION_URL = ALARMS_URL + '/{id}/locations'
 
 
 class NoonlightClient(object):
@@ -66,6 +67,20 @@ class NoonlightClient(object):
                  TooManyRequests, InternalServerError
         """
         return await self._put(ALARM_URL.format(id=id), body)
+
+    async def update_alarm_location(self, id, body):
+        """
+        Update the alarm location
+
+        :param id: Id of the alarm
+        :param body: A dictionary of data to post with the alarm. Will be
+            automatically serialized to JSON. See
+            https://docs.noonlight.com/reference#update-alarm-location
+        :returns: Updated coordinates for the alarm
+        :raises: ClientError, Unauthorized, BadRequest, Forbidden,
+                 TooManyRequests, InternalServerError
+        """
+        return await self._post(ALARM_LOCATION_URL.format(id=id), body)
 
     @staticmethod
     def handle_error(status, error):
