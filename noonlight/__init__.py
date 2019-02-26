@@ -1,6 +1,6 @@
 import aiohttp
 
-BASE_URL = "https://api-sandbox.safetrek.io/v1"
+BASE_URL = "https://api-sandbox.noonlight.com/platform/v1"
 ALARMS_URL = BASE_URL + '/alarms'
 ALARM_URL = ALARMS_URL + '/{id}/status'
 ALARM_LOCATION_URL = ALARMS_URL + '/{id}/locations'
