@@ -42,3 +42,14 @@ def test_create_alarm():
         resp = loop.run_until_complete(client.create_alarm({"anything": "anything"}))
 
         assert {'status': 200} == resp
+
+def test_update_alarm_location():
+    with aioresponses() as mocked:
+        mocked.post(
+            'https://api-sandbox.safetrek.io/v1/alarms/' + alarm_id + '/locations',
+            status=200, body='{"status": 200}')
+
+        resp = loop.run_until_complete(client.update_alarm_location(alarm_id, {"coordinates": {"lat": 1, "lng": 2}}))
+
+        assert {'status': 200} == resp
+
