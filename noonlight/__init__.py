@@ -1,10 +1,6 @@
 import aiohttp
 
-BASE_URL = "https://api-sandbox.noonlight.com/platform/v1"
-ALARMS_URL = BASE_URL + '/alarms'
-ALARM_URL = ALARMS_URL + '/{id}/status'
-ALARM_LOCATION_URL = ALARMS_URL + '/{id}/locations'
-
+DEFAULT_BASE_URL = "https://api-sandbox.noonlight.com/platform/v1"
 
 class NoonlightClient(object):
     """
@@ -17,7 +13,6 @@ class NoonlightClient(object):
     :param timeout: seconds to wait for before triggering a timeout
     :type timeout: integer
     """
-
     def __init__(self, token, session=None,
                  timeout=aiohttp.client.DEFAULT_TIMEOUT):
         """
@@ -29,7 +24,21 @@ class NoonlightClient(object):
             self._session = session
         else:
             self._session = aiohttp.ClientSession(timeout=timeout)
+        
+        self._base_url = DEFAULT_BASE_URL
 
+    @property
+    def alarms_url(self):
+        return "{}/alarms".format(self._base_url)
+        
+    @property
+    def alarm_status_url(self):
+        return "{url}/{id}/status".format(url=self.alarms_url,id='{id}')
+        
+    @property
+    def alarm_location_url(self):
+        return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
+            
     async def get_alarm_status(self, id):
         """
         Get the status of an alarm by id
@@ -39,7 +48,7 @@ class NoonlightClient(object):
         :raises: ClientError, Unauthorized, BadRequest, Forbidden,
                  TooManyRequests, InternalServerError
         """
-        return await self._get(ALARM_URL.format(id=id))
+        return await self._get(self.alarm_status_url.format(id=id))
 
     async def create_alarm(self, body):
         """
@@ -52,7 +61,7 @@ class NoonlightClient(object):
         :raises: ClientError, Unauthorized, BadRequest, Forbidden,
                  TooManyRequests, InternalServerError
         """
-        return await self._post(ALARMS_URL, body)
+        return await self._post(self.alarms_url, body)
 
     async def update_alarm(self, id, body):
         """
@@ -66,7 +75,7 @@ class NoonlightClient(object):
         :raises: ClientError, Unauthorized, BadRequest, Forbidden,
                  TooManyRequests, InternalServerError
         """
-        return await self._put(ALARM_URL.format(id=id), body)
+        return await self._put(self.alarm_status_url.format(id=id), body)
 
     async def update_alarm_location(self, id, body):
         """
@@ -80,7 +89,7 @@ class NoonlightClient(object):
         :raises: ClientError, Unauthorized, BadRequest, Forbidden,
                  TooManyRequests, InternalServerError
         """
-        return await self._post(ALARM_LOCATION_URL.format(id=id), body)
+        return await self._post(self.alarm_location_url.format(id=id), body)
 
     @staticmethod
     def handle_error(status, error):
