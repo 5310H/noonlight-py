@@ -2,6 +2,57 @@ import aiohttp
 
 DEFAULT_BASE_URL = "https://api-sandbox.noonlight.com/platform/v1"
 
+NOONLIGHT_SERVICES_POLICE = 'police'
+NOONLIGHT_SERVICES_FIRE = 'fire'
+NOONLIGHT_SERVICES_MEDICAL = 'medical'
+
+class NoonlightAlarm(object):
+    """
+    Noonlight API Alarm Object
+    
+    :param client: NoonlightClient parent object
+    :type client: NoonlightClient
+    :param json_data: Parsed JSON dictionary from API response to populate the NoonlightAlarm object
+    :type json_data: dict
+    """
+    def __init__(self, client, json_data):
+        """
+        Creates a new :class:`NoonlightAlarm` instance.
+        """
+        self._client = client
+        self._json_data = json_data
+        
+    @property
+    def id(self):
+        """Returns the ID of this NoonlightAlarm"""
+        return self._json_data.get('id')
+        
+    @property
+    def status(self):
+        """Returns the last known status of this NoonlightAlarm"""
+        return self._json_data.get('status')
+        
+    @property
+    def services(self):
+        """Returns a list of active services for this NoonlightAlarm"""
+        services = self._json_data.get('services',{})
+        return [key for key in services if services[key]]
+        
+    @property
+    def is_police(self):
+        """Returns True if police services are included in this alarm"""
+        return NOONLIGHT_SERVICES_POLICE in self.services
+        
+    @property
+    def is_fire(self):
+        """Returns True if fire services are included in this alarm"""
+        return NOONLIGHT_SERVICES_FIRE in self.services
+        
+    @property
+    def is_medical(self):
+        """Returns True if medical services are included in this alarm"""
+        return NOONLIGHT_SERVICES_MEDICAL in self.services
+    
 class NoonlightClient(object):
     """
     NoonlightClient API client
