@@ -2,13 +2,14 @@ import aiohttp
 import asyncio
 import pytest
 from aioresponses import aioresponses
-from noonlight import NoonlightClient
+from noonlight import NoonlightClient, DEFAULT_BASE_URL
 
 alarm_id = 'abcd1234'
 
 loop = asyncio.get_event_loop()
 session = aiohttp.ClientSession(loop=loop)
 client = NoonlightClient('test-token', session=session)
+client._base_url = 'https://api-sandbox.safetrek.io/v1'
 
 
 def test_get_alarm_status():
