@@ -1,10 +1,14 @@
 import aiohttp
 
+from datetime import datetime
+
 DEFAULT_BASE_URL = "https://api-sandbox.noonlight.com/platform/v1"
 
 NOONLIGHT_SERVICES_POLICE = 'police'
 NOONLIGHT_SERVICES_FIRE = 'fire'
 NOONLIGHT_SERVICES_MEDICAL = 'medical'
+
+NOONLIGHT_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 class NoonlightAlarm(object):
     """
@@ -52,6 +56,11 @@ class NoonlightAlarm(object):
     def is_medical(self):
         """Returns True if medical services are included in this alarm"""
         return NOONLIGHT_SERVICES_MEDICAL in self.services
+        
+    @property
+    def created_at(self):
+        """Returns the datetime the NoonlightAlarm was created"""
+        return datetime.strptime(self._json_data.get('created_at',"0001-01-01T00:00:00.00Z"),NOONLIGHT_DATETIME_FORMAT)
     
 class NoonlightClient(object):
     """
