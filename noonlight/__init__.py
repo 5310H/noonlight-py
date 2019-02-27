@@ -27,6 +27,13 @@ class NoonlightAlarm(object):
         self._client = client
         self._json_data = json_data
         
+    @classmethod
+    async def create(cls, client, json_data_future):
+        """
+        Factory coroutine for creating NoonlightAlarm objects
+        """
+        return NoonlightAlarm(client, await json_data_future)
+        
     @property
     def id(self):
         """Returns the ID of this NoonlightAlarm"""
@@ -153,11 +160,11 @@ class NoonlightClient(object):
         :param body: A dictionary of data to post with the alarm. Will be
             automatically serialized to JSON. See
             https://docs.noonlight.com/reference#create-alarm
-        :returns: Alarm data as a dictionary
+        :returns: :class:`NoonlightAlarm` object
         :raises: ClientError, Unauthorized, BadRequest, Forbidden,
                  TooManyRequests, InternalServerError
         """
-        return await self._post(self.alarms_url, body)
+        return await NoonlightAlarm.create(self, self._post(self.alarms_url, body))
 
     async def update_alarm(self, id, body):
         """
