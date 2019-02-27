@@ -18,14 +18,14 @@ class NoonlightClient(object):
         """
         Creates a new :class:`NoonlightClient` instance.
         """
-        self._headers = {'Authorization': "Bearer " + token,
-                         'Content-Type': 'application/json'}
+        self._headers = {'Content-Type': 'application/json'}
         if session is not None:
             self._session = session
         else:
             self._session = aiohttp.ClientSession(timeout=timeout)
         
         self._base_url = DEFAULT_BASE_URL
+        self.set_token(token)
 
     @property
     def alarms_url(self):
@@ -38,6 +38,10 @@ class NoonlightClient(object):
     @property
     def alarm_location_url(self):
         return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
+        
+    def set_token(self, token):
+        self._token = token
+        self._headers['Authorization'] = "Bearer {}".format(self._token)
             
     async def get_alarm_status(self, id):
         """
