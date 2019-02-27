@@ -16,7 +16,8 @@ class NoonlightAlarm(object):
     
     :param client: NoonlightClient parent object
     :type client: NoonlightClient
-    :param json_data: Parsed JSON dictionary from API response to populate the NoonlightAlarm object
+    :param json_data: Parsed JSON dictionary from API response to populate 
+        the NoonlightAlarm object
     :type json_data: dict
     """
     def __init__(self, client, json_data):
@@ -60,7 +61,29 @@ class NoonlightAlarm(object):
     @property
     def created_at(self):
         """Returns the datetime the NoonlightAlarm was created"""
-        return datetime.strptime(self._json_data.get('created_at',"0001-01-01T00:00:00.00Z"),NOONLIGHT_DATETIME_FORMAT)
+        try:
+            return datetime.strptime(self._json_data.get('created_at',"0001-01-01T00:00:00.00Z"),NOONLIGHT_DATETIME_FORMAT)
+        except:
+            return datetime.min
+        
+    @property
+    def locations(self):
+        """
+        Returns a list of locations for this NoonlightAlarm, sorted by most 
+        recent first
+        
+        NOTE: Currently the Noonlight API only returns the first location when 
+        the alarm is created, additional locations will be appended by this 
+        library.
+        """
+        locations_merged = self._json_data.get('locations',{}).get('addresses',[]) + self._json_data.get('locations',{}).get('coordinates',[])
+        for location in locations_merged:
+            if 'created_at' in location and type(location['created_at']) is not datetime:
+                try:
+                    location['created_at'] = datetime.strptime(location['created_at'],NOONLIGHT_DATETIME_FORMAT)
+                except:
+                    pass
+        return sorted(locations_merged,key=lambda x: x.get('created_at'))
     
 class NoonlightClient(object):
     """
