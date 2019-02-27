@@ -29,17 +29,26 @@ class NoonlightClient(object):
 
     @property
     def alarms_url(self):
+        """Noonlight API base URL for alarms."""
         return "{}/alarms".format(self._base_url)
         
     @property
     def alarm_status_url(self):
+        """Noonlight API URL for alarm status."""
         return "{url}/{id}/status".format(url=self.alarms_url,id='{id}')
         
     @property
     def alarm_location_url(self):
+        """Noonlight API URL for location updates."""
         return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
         
     def set_token(self, token):
+        """
+        Sets the API token for this NoonlightClient
+        
+        :param token: OAuth2 token for the Noonlight API
+        :type token: str
+        """
         self._token = token
         self._headers['Authorization'] = "Bearer {}".format(self._token)
             
