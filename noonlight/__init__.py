@@ -90,7 +90,7 @@ class NoonlightAlarm(object):
                     location['created_at'] = datetime.strptime(location['created_at'],NOONLIGHT_DATETIME_FORMAT)
                 except:
                     pass
-        return sorted(locations_merged,key=lambda x: x.get('created_at'))
+        return sorted(locations_merged,key=lambda x: x.get('created_at'), reverse = True)
         
     async def cancel(self):
         """
@@ -138,7 +138,7 @@ class NoonlightAlarm(object):
         body = {'coordinates': {'lat':lat, 'lng':lng, 'accuracy': accuracy} }
         response = await self._client.update_alarm_location(id = self.id, body = body )
         if 'coordinates' in response:
-            self._add_location('coordinates', response.get('coordinates'))
+            self._add_location('coordinates', response['coordinates'])
             return True
         return False
         
