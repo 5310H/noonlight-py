@@ -91,6 +91,50 @@ class NoonlightAlarm(object):
                 except:
                     pass
         return sorted(locations_merged,key=lambda x: x.get('created_at'))
+        
+    async def cancel(self):
+        """
+        Cancels this alarm using the NoonlightClient that created this 
+        NoonlightAlarm.
+        """
+        pass
+        
+    async def update_location_coordinates(self, lat, lng, accuracy = 5.0):
+        """
+        Update the alarm location with the provided latitude and longitude.
+        
+        :param lat: Latitude of the new location
+        :type lat: double
+        :param lng: Longitude of the new location
+        :type lng: double
+        :param accuracy: (optional) Accuracy of the location in meters (default: 5m)
+        :type accuracy: double
+        """
+        pass
+        
+    async def update_location_address(self, line1, line2, city, state, zip):
+        """
+        Update the alarm location with the provided address.
+        
+        :param line1: Address line 1
+        :type line1: str
+        :param line2: Address line 2 (provide None or "" if N/A)
+        :type line2: str
+        :param city: Address city
+        :type city: str
+        :param state: Address state
+        :type state: str
+        :param zip: Address zip
+        :type zip: str
+        """
+        pass
+        
+    async def get_status(self):
+        """
+        Update and return the current status of this NoonlightAlarm from 
+        the API.
+        """
+        pass
     
 class NoonlightClient(object):
     """
