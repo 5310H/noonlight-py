@@ -189,7 +189,10 @@ class NoonlightAlarm(object):
         Update and return the current status of this NoonlightAlarm from 
         the API.
         """
-        pass
+        response = await self._client.get_alarm_status(id = self.id)
+        if 'status' in response:
+            self._json_data.update(response)
+        return self.status
     
 class NoonlightClient(object):
     """
