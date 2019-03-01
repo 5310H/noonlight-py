@@ -101,11 +101,28 @@ class NoonlightAlarm(object):
             have a 200 status
         :rtype: boolean
         """
-        response = await self._client.update_alarm(self.id, {'status': 'CANCELED'})
+        response = await self._client.update_alarm(id = self.id, body = {'status': 'CANCELED'})
         if response.get('status') == 200:
             self._json_data['status'] = 'CANCELED'
             return True
         return False
+        
+    def _add_location(self, type, data):
+        """
+        Private method to add a location to the NoonlightAlarm object location 
+        collection.
+        
+        :param type: Location type, 'coordinates' or 'address'
+        :type type: str
+        :param data: Location data, lat/lng or address information
+        :type data: dict
+        """
+        if type in ('coordinates','address'):
+            if 'locations' not in self._json_data:
+                self._json_data['locations'] = {}
+            if type not in self._json_data['locations']:
+                self._json_data['locations'][type] = []
+            self._json_data['locations'][type].append(data)
         
     async def update_location_coordinates(self, lat, lng, accuracy = 5.0):
         """
@@ -118,7 +135,12 @@ class NoonlightAlarm(object):
         :param accuracy: (optional) Accuracy of the location in meters (default: 5m)
         :type accuracy: double
         """
-        pass
+        body = {'coordinates': {'lat':lat, 'lng':lng, 'accuracy': accuracy} }
+        response = await self._client.update_alarm_location(id = self.id, body = body )
+        if 'coordinates' in response:
+            self._add_location('coordinates', response.get('coordinates'))
+            return True
+        return False
         
     async def update_location_address(self, line1, line2, city, state, zip):
         """
