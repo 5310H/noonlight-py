@@ -96,8 +96,16 @@ class NoonlightAlarm(object):
         """
         Cancels this alarm using the NoonlightClient that created this 
         NoonlightAlarm.
+        
+        :returns: True if alarm is cancelled, False if a response does not 
+            have a 200 status
+        :rtype: boolean
         """
-        pass
+        response = await self._client.update_alarm(self.id, {'status': 'CANCELED'})
+        if response.get('status') == 200:
+            self._json_data['status'] = 'CANCELED'
+            return True
+        return False
         
     async def update_location_coordinates(self, lat, lng, accuracy = 5.0):
         """
