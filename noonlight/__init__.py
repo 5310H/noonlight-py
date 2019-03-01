@@ -107,23 +107,6 @@ class NoonlightAlarm(object):
             return True
         return False
         
-    def _add_location(self, type, data):
-        """
-        Private method to add a location to the NoonlightAlarm object location 
-        collection.
-        
-        :param type: Location type, 'coordinates' or 'address'
-        :type type: str
-        :param data: Location data, lat/lng or address information
-        :type data: dict
-        """
-        if type in ('coordinates','address'):
-            if 'locations' not in self._json_data:
-                self._json_data['locations'] = {}
-            if type not in self._json_data['locations']:
-                self._json_data['locations'][type] = []
-            self._json_data['locations'][type].append(data)
-        
     async def update_location_coordinates(self, lat, lng, accuracy = 5.0):
         """
         Update the alarm location with the provided latitude and longitude.
@@ -134,13 +117,12 @@ class NoonlightAlarm(object):
         :type lng: double
         :param accuracy: (optional) Accuracy of the location in meters (default: 5m)
         :type accuracy: double
+        
+        :returns: True if location is updated and added to the locations list
+        :rtype: boolean
         """
-        body = {'coordinates': {'lat':lat, 'lng':lng, 'accuracy': accuracy} }
-        response = await self._client.update_alarm_location(id = self.id, body = body )
-        if 'coordinates' in response:
-            self._add_location('coordinates', response['coordinates'])
-            return True
-        return False
+        data = {'lat':lat, 'lng':lng, 'accuracy': accuracy}
+        return await self._update_location_by_type('coordinates', data)
         
     async def update_location_address(self, line1, line2, city, state, zip):
         """
@@ -156,8 +138,51 @@ class NoonlightAlarm(object):
         :type state: str
         :param zip: Address zip
         :type zip: str
+        
+        :returns: True if location is updated and added to the locations list
+        :rtype: boolean
         """
-        pass
+        data = {'line1':line1, 'city':city, 'state': state.upper(), 'zip': zip}
+        if line2 and len(line2) > 0:
+            data['line2'] = line2
+        return await self._update_location_by_type('address', data)
+        
+    async def _update_location_by_type(self, type, data):
+        """
+        Private method to update alarm location by type (coordinates or 
+        address).
+        
+        :param type: Location type, 'coordinates' or 'address'
+        :type type: str
+        :param data: Location data, lat/lng or address information
+        :type data: dict
+        """
+        if type in ('coordinates','address'):
+            response = await self._client.update_alarm_location(id = self.id, body = {type: data} )
+            if type in response:
+                self._add_location(type, response[type])
+                return True
+        return False
+        
+    def _add_location(self, type, data):
+        """
+        Private method to add a location to the NoonlightAlarm object location 
+        collection.
+        
+        :param type: Location type, 'coordinates' or 'address'
+        :type type: str
+        :param data: Location data, lat/lng or address information
+        :type data: dict
+        """
+        if type in ('coordinates','address'):
+            key = type
+            if type == 'address':
+                key = 'addresses'
+            if 'locations' not in self._json_data:
+                self._json_data['locations'] = {}
+            if type not in self._json_data['locations']:
+                self._json_data['locations'][key] = []
+            self._json_data['locations'][key].append(data)
         
     async def get_status(self):
         """
