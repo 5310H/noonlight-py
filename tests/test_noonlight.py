@@ -2,13 +2,14 @@ import aiohttp
 import asyncio
 import pytest
 from aioresponses import aioresponses
-from noonlight import NoonlightClient
+from noonlight import NoonlightClient, DEFAULT_BASE_URL
 
 alarm_id = 'abcd1234'
 
 loop = asyncio.get_event_loop()
 session = aiohttp.ClientSession(loop=loop)
 client = NoonlightClient('test-token', session=session)
+client._base_url = 'https://api-sandbox.safetrek.io/v1'
 
 
 def test_get_alarm_status():
@@ -42,3 +43,14 @@ def test_create_alarm():
         resp = loop.run_until_complete(client.create_alarm({"anything": "anything"}))
 
         assert {'status': 200} == resp
+
+def test_update_alarm_location():
+    with aioresponses() as mocked:
+        mocked.post(
+            'https://api-sandbox.safetrek.io/v1/alarms/' + alarm_id + '/locations',
+            status=200, body='{"status": 200}')
+
+        resp = loop.run_until_complete(client.update_alarm_location(alarm_id, {"coordinates": {"lat": 1, "lng": 2}}))
+
+        assert {'status': 200} == resp
+
