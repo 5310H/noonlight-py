@@ -90,7 +90,109 @@ class NoonlightAlarm(object):
                     location['created_at'] = datetime.strptime(location['created_at'],NOONLIGHT_DATETIME_FORMAT)
                 except:
                     pass
-        return sorted(locations_merged,key=lambda x: x.get('created_at'))
+        return sorted(locations_merged,key=lambda x: x.get('created_at'), reverse = True)
+        
+    async def cancel(self):
+        """
+        Cancels this alarm using the NoonlightClient that created this 
+        NoonlightAlarm.
+        
+        :returns: True if alarm is cancelled, False if a response does not 
+            have a 200 status
+        :rtype: boolean
+        """
+        response = await self._client.update_alarm(id = self.id, body = {'status': 'CANCELED'})
+        if response.get('status') == 200:
+            self._json_data['status'] = 'CANCELED'
+            return True
+        return False
+        
+    async def update_location_coordinates(self, *, lat, lng, accuracy = 5.0):
+        """
+        Update the alarm location with the provided latitude and longitude.
+        
+        :param lat: Latitude of the new location
+        :type lat: double
+        :param lng: Longitude of the new location
+        :type lng: double
+        :param accuracy: (optional) Accuracy of the location in meters (default: 5m)
+        :type accuracy: double
+        
+        :returns: True if location is updated and added to the locations list
+        :rtype: boolean
+        """
+        data = {'lat':lat, 'lng':lng, 'accuracy': accuracy}
+        return await self._update_location_by_type('coordinates', data)
+        
+    async def update_location_address(self, *, line1, line2 = None, city, state, zip):
+        """
+        Update the alarm location with the provided address.
+        
+        :param line1: Address line 1
+        :type line1: str
+        :param line2: Address line 2 (provide None or "" if N/A)
+        :type line2: str
+        :param city: Address city
+        :type city: str
+        :param state: Address state
+        :type state: str
+        :param zip: Address zip
+        :type zip: str
+        
+        :returns: True if location is updated and added to the locations list
+        :rtype: boolean
+        """
+        data = {'line1':line1, 'city':city, 'state': state.upper(), 'zip': zip}
+        if line2 and len(line2) > 0:
+            data['line2'] = line2
+        return await self._update_location_by_type('address', data)
+        
+    async def _update_location_by_type(self, type, data):
+        """
+        Private method to update alarm location by type (coordinates or 
+        address).
+        
+        :param type: Location type, 'coordinates' or 'address'
+        :type type: str
+        :param data: Location data, lat/lng or address information
+        :type data: dict
+        """
+        if type in ('coordinates','address'):
+            response = await self._client.update_alarm_location(id = self.id, body = {type: data} )
+            if type in response:
+                self._add_location(type, response[type])
+                return True
+        return False
+        
+    def _add_location(self, type, data):
+        """
+        Private method to add a location to the NoonlightAlarm object location 
+        collection.
+        
+        :param type: Location type, 'coordinates' or 'address'
+        :type type: str
+        :param data: Location data, lat/lng or address information
+        :type data: dict
+        """
+        if type in ('coordinates','address'):
+            key = type
+            if type == 'address':
+                key = 'addresses'
+            if 'locations' not in self._json_data:
+                self._json_data['locations'] = {}
+            if type not in self._json_data['locations']:
+                self._json_data['locations'][key] = []
+            self._json_data['locations'][key].append(data)
+        
+    async def get_status(self):
+        """
+        Update and return the current status of this NoonlightAlarm from 
+        the API.
+        """
+        response = await self._client.get_alarm_status(id = self.id)
+        if 'status' in response:
+            self._json_data.update(response)
+        return self.status
     
 class NoonlightClient(object):
     """
@@ -115,7 +217,7 @@ class NoonlightClient(object):
             self._session = aiohttp.ClientSession(timeout=timeout)
         
         self._base_url = DEFAULT_BASE_URL
-        self.set_token(token)
+        self.set_token(token = token)
 
     @property
     def alarms_url(self):
@@ -132,7 +234,7 @@ class NoonlightClient(object):
         """Noonlight API URL for location updates."""
         return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
         
-    def set_token(self, token):
+    def set_token(self, *, token):
         """
         Sets the API token for this NoonlightClient
         
@@ -142,7 +244,7 @@ class NoonlightClient(object):
         self._token = token
         self._headers['Authorization'] = "Bearer {}".format(self._token)
             
-    async def get_alarm_status(self, id):
+    async def get_alarm_status(self, *, id):
         """
         Get the status of an alarm by id
 
@@ -153,7 +255,7 @@ class NoonlightClient(object):
         """
         return await self._get(self.alarm_status_url.format(id=id))
 
-    async def create_alarm(self, body):
+    async def create_alarm(self, *, body):
         """
         Create an alarm
 
@@ -166,7 +268,7 @@ class NoonlightClient(object):
         """
         return await NoonlightAlarm.create(self, self._post(self.alarms_url, body))
 
-    async def update_alarm(self, id, body):
+    async def update_alarm(self, *, id, body):
         """
         Create an alarm
 
@@ -180,7 +282,7 @@ class NoonlightClient(object):
         """
         return await self._put(self.alarm_status_url.format(id=id), body)
 
-    async def update_alarm_location(self, id, body):
+    async def update_alarm_location(self, *, id, body):
         """
         Update the alarm location
 
