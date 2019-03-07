@@ -18,7 +18,7 @@ def test_get_alarm_status():
             'https://api-sandbox.safetrek.io/v1/alarms/' + alarm_id + '/status',
             status=200, body='{"status": "ACTIVE"}')
 
-        resp = loop.run_until_complete(client.get_alarm_status(alarm_id))
+        resp = loop.run_until_complete(client.get_alarm_status(id=alarm_id))
 
         assert {'status': 'ACTIVE'} == resp
 
@@ -29,7 +29,7 @@ def test_update_alarm():
             'https://api-sandbox.safetrek.io/v1/alarms/' + alarm_id + '/status',
             status=200, body='{"status": 200}')
 
-        resp = loop.run_until_complete(client.update_alarm(alarm_id, {"status": "CANCELED"}))
+        resp = loop.run_until_complete(client.update_alarm(id=alarm_id, body={"status": "CANCELED"}))
 
         assert {'status': 200} == resp
 
@@ -40,9 +40,9 @@ def test_create_alarm():
             'https://api-sandbox.safetrek.io/v1/alarms',
             status=200, body='{"status": 200}')
 
-        resp = loop.run_until_complete(client.create_alarm({"anything": "anything"}))
+        alarm = loop.run_until_complete(client.create_alarm(body={"anything": "anything"}))
 
-        assert {'status': 200} == resp
+        assert alarm.status == 200
 
 def test_update_alarm_location():
     with aioresponses() as mocked:
@@ -50,7 +50,7 @@ def test_update_alarm_location():
             'https://api-sandbox.safetrek.io/v1/alarms/' + alarm_id + '/locations',
             status=200, body='{"status": 200}')
 
-        resp = loop.run_until_complete(client.update_alarm_location(alarm_id, {"coordinates": {"lat": 1, "lng": 2}}))
+        resp = loop.run_until_complete(client.update_alarm_location(id=alarm_id, body={"coordinates": {"lat": 1, "lng": 2}}))
 
         assert {'status': 200} == resp
 
