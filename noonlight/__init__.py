@@ -107,7 +107,7 @@ class NoonlightAlarm(object):
             return True
         return False
         
-    async def update_location_coordinates(self, lat, lng, accuracy = 5.0):
+    async def update_location_coordinates(self, *, lat, lng, accuracy = 5.0):
         """
         Update the alarm location with the provided latitude and longitude.
         
@@ -124,7 +124,7 @@ class NoonlightAlarm(object):
         data = {'lat':lat, 'lng':lng, 'accuracy': accuracy}
         return await self._update_location_by_type('coordinates', data)
         
-    async def update_location_address(self, line1, line2, city, state, zip):
+    async def update_location_address(self, *, line1, line2 = None, city, state, zip):
         """
         Update the alarm location with the provided address.
         
@@ -217,7 +217,7 @@ class NoonlightClient(object):
             self._session = aiohttp.ClientSession(timeout=timeout)
         
         self._base_url = DEFAULT_BASE_URL
-        self.set_token(token)
+        self.set_token(token = token)
 
     @property
     def alarms_url(self):
@@ -234,7 +234,7 @@ class NoonlightClient(object):
         """Noonlight API URL for location updates."""
         return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
         
-    def set_token(self, token):
+    def set_token(self, *, token):
         """
         Sets the API token for this NoonlightClient
         
@@ -244,7 +244,7 @@ class NoonlightClient(object):
         self._token = token
         self._headers['Authorization'] = "Bearer {}".format(self._token)
             
-    async def get_alarm_status(self, id):
+    async def get_alarm_status(self, *, id):
         """
         Get the status of an alarm by id
 
@@ -255,7 +255,7 @@ class NoonlightClient(object):
         """
         return await self._get(self.alarm_status_url.format(id=id))
 
-    async def create_alarm(self, body):
+    async def create_alarm(self, *, body):
         """
         Create an alarm
 
@@ -268,7 +268,7 @@ class NoonlightClient(object):
         """
         return await NoonlightAlarm.create(self, self._post(self.alarms_url, body))
 
-    async def update_alarm(self, id, body):
+    async def update_alarm(self, *, id, body):
         """
         Create an alarm
 
@@ -282,7 +282,7 @@ class NoonlightClient(object):
         """
         return await self._put(self.alarm_status_url.format(id=id), body)
 
-    async def update_alarm_location(self, id, body):
+    async def update_alarm_location(self, *, id, body):
         """
         Update the alarm location
 
