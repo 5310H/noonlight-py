@@ -193,7 +193,48 @@ class NoonlightAlarm(object):
         if 'status' in response:
             self._json_data.update(response)
         return self.status
-    
+
+class NoonlightSensorEvent(object):
+    def __init__(self, *, 
+            timestamp, device_id, device_model, device_manufacturer, 
+            device_name, attribute, value, unit
+        ):
+        self._timestamp = timestamp
+        if isinstance(timestamp,datetime):
+            self._timestamp = "{}Z".format(timestamp.isoformat())
+        self._device_id = device_id
+        self._device_model = device_model
+        self._device_manufacturer = device_manufacturer
+        self._device_name = device_name
+        self._attribute = attribute
+        self._value = value
+        self._unit = unit
+        
+    @property
+    def timestamp(self):
+        return self._timestamp
+    @property
+    def device_id(self):
+        return self._device_id
+    @property
+    def device_model(self):
+        return self._device_model
+    @property
+    def device_manufacturer(self):
+        return self._device_manufacturer
+    @property
+    def device_name(self):
+        return self._device_name
+    @property
+    def attribute(self):
+        return self._attribute
+    @property
+    def value(self):
+        return self._value
+    @property
+    def unit(self):
+        return self._unit
+        
 class NoonlightClient(object):
     """
     NoonlightClient API client
@@ -233,6 +274,11 @@ class NoonlightClient(object):
     def alarm_location_url(self):
         """Noonlight API URL for location updates."""
         return "{url}/{id}/locations".format(url=self.alarms_url,id='{id}')
+        
+    @property
+    def alarm_sensor_events_url(self):
+        """Noonlight API URL for sensor events."""
+        return "{}/st-events".format(self._base_url)
         
     def set_token(self, *, token):
         """
@@ -295,6 +341,33 @@ class NoonlightClient(object):
                  TooManyRequests, InternalServerError
         """
         return await self._post(self.alarm_location_url.format(id=id), body)
+        
+    def _sensor_event_to_dict(self, sensor_event):
+        event_attrs = [
+            'timestamp', 'device_id', 'device_model', 'device_manufacturer',
+            'device_name', 'attribute', 'value', 'unit'
+        ]
+        return {attr: getattr(sensor_event,attr) for attr in event_attrs}
+      
+    async def send_sensor_events(self, *, sensor_events):
+        """
+        Send a stream of sensor events or states to Noonlight
+        
+        :param sensor_events: a list of :class:`NoonlightSensorEvent` objects
+        :type sensor_events: list
+        """
+        events = [self._sensor_event_to_dict(event) for event in sensor_events if isinstance(event, NoonlightSensorEvent)]
+        return await self._post(self.alarm_sensor_events_url, data = events)
+        
+    async def send_sensor_event(self, *, sensor_event):
+        """
+        Send one sensor event or state to Noonlight
+        
+        :param sensor_event: a :class:`NoonlightSensorEvent` object
+        :type sensor_event: NoonlightSensorEvent
+        """
+        return await self.send_sensor_events(sensor_events = [sensor_event])
+        
 
     @staticmethod
     def handle_error(status, error):
