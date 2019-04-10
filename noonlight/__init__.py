@@ -26,6 +26,8 @@ class NoonlightAlarm(object):
         """
         self._client = client
         self._json_data = json_data
+        self._sensor_events = []
+        self._sent_sensor_events = []
         
     @classmethod
     async def create(cls, client, json_data_future):
@@ -91,6 +93,56 @@ class NoonlightAlarm(object):
                 except:
                     pass
         return sorted(locations_merged,key=lambda x: x.get('created_at'), reverse = True)
+        
+    @property
+    def events(self):
+        return self._sensor_events
+        
+    @property
+    def sent_events(self):
+        return self._sent_sensor_events
+        
+    @property
+    def unsent_events(self):
+        return list(set(self.events) - set(self.sent_events))
+        
+    async def add_event(self, *, event, send_immediately = True):
+        """
+        Adds a :class:`NoonlightSensorEvent` to this :class:`NoonlightAlarm`'s
+        sensor event queue and optionally flush the event queue to the
+        Noonlight API immediately (true by default)
+        
+        :param event: a NoonlightSensorEvent object
+        :type event: NoonlightSensorEvent
+        :param send_immediately: set to True if the this event and all other 
+            un-sent events in the queue should be sent to the Noonlight API 
+            immediately (default: True)
+        :type send_immediately: bool
+        
+        :returns: a list of transmitted events if `send_immediately` is True, 
+            a list of un-transmitted events if `send_immediately` is False, 
+            None if the event is already in queue to transmit or has been 
+            transmitted already
+        """
+        if event and event not in self._sensor_events:
+            self._sensor_events.append(event)
+            if send_immediately:
+                return await self.send_events()
+            return self.unsent_events
+        return None
+                
+    async def send_events(self):
+        """
+        Sends all previously un-sent `NoonlightSensorEvent`s in the queue to 
+        the Noonlight API.
+        """
+        events_to_send = self.unsent_events
+        if len(events_to_send) > 0:
+            response = await self._client.send_sensor_events(sensor_events = events_to_send)
+            if 'id' in response:
+                self._sent_sensor_events.extend(events_to_send)
+                return events_to_send
+        return []
         
     async def cancel(self):
         """
@@ -234,6 +286,18 @@ class NoonlightSensorEvent(object):
     @property
     def unit(self):
         return self._unit
+
+    def __members(self):
+        return (self.timestamp, self.device_id)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__members() == other.__members()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.__members())
         
 class NoonlightClient(object):
     """
