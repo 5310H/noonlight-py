@@ -243,6 +243,15 @@ class NoonlightClient(object):
         """
         self._token = token
         self._headers['Authorization'] = "Bearer {}".format(self._token)
+
+    def set_base_url(self, base_url):
+        """
+        Override the default Noonlight base url for API calls.
+
+        :param base_url: Base URL for the Noonlight API
+        :type base_url: str
+        """
+        self._base_url = base_url
             
     async def get_alarm_status(self, *, id):
         """

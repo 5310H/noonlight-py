@@ -39,7 +39,7 @@ View details and usage examples in the `README.md <https://github.com/konnected-
 
 setup(
     name='noonlight',
-    version='0.1.0',
+    version='0.1.1',
     packages=['noonlight'],
     url='https://github.com/konnected-io/noonlight-py',
     license=license,
