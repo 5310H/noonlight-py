@@ -16,7 +16,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='noonlight',
-    version='0.1.1',
+    version='0.1.2',
     packages=['noonlight'],
     url='https://github.com/konnected-io/noonlight-py',
     license="MIT License",
